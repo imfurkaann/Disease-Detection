@@ -1,16 +1,60 @@
 import gradio as gr
 import pickle
 import pandas as pd
-from theme import Seafoam
+import sys
+import os
+from typing import Iterable
+import gradio as gr
+from gradio.themes.base import Base
+from gradio.themes.utils import colors, fonts, sizes
+import time
 
-# Load models
-with open('models/model_xgb.pkl', 'rb') as f:
-    heart_model = pickle.load(f)
-    
+class Seafoam(Base):
+    def __init__(
+        self,
+        *,
+        primary_hue: colors.Color | str = colors.emerald,
+        secondary_hue: colors.Color | str = colors.blue,
+        neutral_hue: colors.Color | str = colors.gray,
+        spacing_size: sizes.Size | str = sizes.spacing_md,
+        radius_size: sizes.Size | str = sizes.radius_md,
+        text_size: sizes.Size | str = sizes.text_lg,
+        font: fonts.Font
+        | str
+        | Iterable[fonts.Font | str] = (
+            fonts.GoogleFont("Quicksand"),
+            "ui-sans-serif",
+            "sans-serif",
+        ),
+        font_mono: fonts.Font
+        | str
+        | Iterable[fonts.Font | str] = (
+            fonts.GoogleFont("IBM Plex Mono"),
+            "ui-monospace",
+            "monospace",
+        ),
+    ):
+        super().__init__(
+            primary_hue=primary_hue,
+            secondary_hue=secondary_hue,
+            neutral_hue=neutral_hue,
+            spacing_size=spacing_size,
+            radius_size=radius_size,
+            text_size=text_size,
+            font=font,
+            font_mono=font_mono,
+        )
+
 seafoam = Seafoam()
 
+
+    
 def predict_heart_disease(Age, Sex, ChestPainType, RestingBP, Cholesterol, FastingBS, 
                          RestingECG, MaxHR, ExerciseAngina, Oldpeak, ST_Slope):
+    
+    with open('data_processing/models/model_heart.pkl', 'rb') as f:
+        heart_model = pickle.load(f)
+    
     data = {
         'Age': [float(Age)],
         'Sex': [1 if Sex == 'Male' else 0],
@@ -38,17 +82,16 @@ def predict_heart_disease(Age, Sex, ChestPainType, RestingBP, Cholesterol, Fasti
     return html_result
 
 def predict_diabetes(Age, BMI, Glucose, BloodPressure, Insulin, DiabetesPedigree):
-    result = "Hasta"  # Placeholder result
+    result = "Hasta"  
     html_result = f"<div class='result-box {result.lower()}'>{result}</div>"
     return html_result
 
 def predict_cancer(Age, TumorSize, LymphNodes, Malignancy, CellShape, CellSize):
-    result = "Sağlıklı"  # Placeholder result
+    result = "Sağlıklı" 
     html_result = f"<div class='result-box {result.lower()}'>{result}</div>"
     return html_result
 
 with gr.Blocks(theme=seafoam) as demo:
-    # Add custom CSS for styling
     gr.HTML(
         """
         <style>
@@ -237,4 +280,4 @@ with gr.Blocks(theme=seafoam) as demo:
         outputs=cancer_output
     )
 
-demo.launch(share=True)
+demo.launch()
