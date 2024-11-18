@@ -7,7 +7,7 @@ AI-powered web interface for detecting three key health conditions:
 - Asthma Diagnosis
 
 ## Example Usage
-![Example Usage](https://github.com/imfurkaann/autoML/blob/main/gif/video.gif)
+![Example Usage](https://github.com/imfurkaann/Multiple-Disease-Detection/blob/main/gif/usage_gif.gif)
 
 ## Technologies
 - Machine Learning
