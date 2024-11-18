@@ -1,6 +1,7 @@
 import gradio as gr
 import pickle
 import pandas as pd
+import numpy as np
 import sys
 import os
 from typing import Iterable
@@ -8,6 +9,7 @@ import gradio as gr
 from gradio.themes.base import Base
 from gradio.themes.utils import colors, fonts, sizes
 import time
+from sklearn.preprocessing import StandardScaler
 
 class Seafoam(Base):
     def __init__(
@@ -54,7 +56,7 @@ def predict_heart_disease(Age, Sex, ChestPainType, RestingBP, Cholesterol, Fasti
     
     with open('data_processing/models/model_heart.pkl', 'rb') as f:
         heart_model = pickle.load(f)
-    
+        
     data = {
         'Age': [float(Age)],
         'Sex': [1 if Sex == 'Male' else 0],
@@ -81,9 +83,38 @@ def predict_heart_disease(Age, Sex, ChestPainType, RestingBP, Cholesterol, Fasti
     html_result = f"<div class='result-box {result.lower()}'>{result}</div>"
     return html_result
 
-def predict_diabetes(Age, BMI, Glucose, BloodPressure, Insulin, DiabetesPedigree):
-    result = "Hasta"  
-    html_result = f"<div class='result-box {result.lower()}'>{result}</div>"
+def predict_bodyfat(Age,Weight,Height,Neck,Chest,Abdomen,Hip,Thigh,Knee,Ankle,Biceps,Forearm,Wrist):
+    
+    with open('data_processing/models/model_bodyfat.pkl', 'rb') as f:
+        bodyfat_model = pickle.load(f)
+        
+    scaler = StandardScaler()
+
+    data =  {
+        "Age" :Age,
+        "Weight":Weight,
+        "Height":Height,
+        "Neck":Neck,
+        "Chest":Chest,
+        "Abdomen":Abdomen,
+        "Hip":Hip,
+        "Thigh":Thigh,
+        "Knee":Knee,
+        "Ankle":Ankle,
+        "Biceps":Biceps,
+        "Forearm":Forearm,
+        "Wrist":Wrist       
+    }
+    
+    df_input = pd.DataFrame(data, index=[0])
+    df_input["BMI"] = df_input["Weight"] / (df_input["Height"])**2
+    df_input['BF_BMI'] = df_input['BMI'] * 1.39 + df_input['Age'] * 0.16 - 19.34    
+    df_input["Obesite"] = np.where(df_input["BMI"] > 30, 1, 0)
+    
+    prediction = bodyfat_model.predict(df_input)
+      
+    result = prediction[0] 
+    html_result = f"<div class='result-box {result}'>{result}</div>"
     return html_result
 
 def predict_cancer(Age, TumorSize, LymphNodes, Malignancy, CellShape, CellSize):
@@ -219,21 +250,29 @@ with gr.Blocks(theme=seafoam) as demo:
                     heart_submit = gr.Button("Predict", size="lg")
                     heart_output = gr.HTML(label="Result")
 
-        # Diabetes Tab
-        with gr.Tab("Diabetes Prediction"):
+        # BodyFat Tab
+        with gr.Tab("BodyFat Prediction"):
             with gr.Column(elem_id="centered-container"):
-                gr.Markdown("# Diabetes Prediction", elem_classes="markdown-text")
-                
+                gr.Markdown("# BodyFat Prediction", elem_classes="markdown-text")
                 with gr.Group(elem_classes="form-container"):
-                    diabetes_age = gr.Number(label="Age")
-                    diabetes_bmi = gr.Number(label="BMI")
-                    diabetes_glucose = gr.Number(label="Glucose Level")
-                    diabetes_bp = gr.Number(label="Blood Pressure")
-                    diabetes_insulin = gr.Number(label="Insulin Level")
-                    diabetes_pedigree = gr.Number(label="Diabetes Pedigree Function")
                     
-                    diabetes_submit = gr.Button("Predict", size="lg")
-                    diabetes_output = gr.HTML(label="Result")
+                    bodyfat_Age = gr.Number(label="Age")
+                    bodyfat_Weight = gr.Number(label="Weight")
+                    bodyfat_Height = gr.Number(label="Height")
+                    bodyfat_Neck = gr.Number(label="Neck")
+                    bodyfat_Chest = gr.Number(label="Chest")
+                    bodyfat_Abdomen = gr.Number(label="Abdomen")
+                    bodyfat_Hip = gr.Number(label="Hip")
+                    bodyfat_Thigh = gr.Number(label="Thigh")
+                    bodyfat_Knee = gr.Number(label="Knee")
+                    bodyfat_Ankle = gr.Number(label="Ankle")
+                    bodyfat_Biceps = gr.Number(label="Biceps")
+                    bodyfat_Forearm = gr.Number(label="Forearm")
+                    bodyfat_Wrist = gr.Number(label="Wrist")
+
+                    
+                    bodyfat_submit = gr.Button("Predict", size="lg")
+                    bodyfat_output = gr.HTML(label="Result")
 
         # Cancer Tab
         with gr.Tab("Cancer Prediction"):
@@ -262,13 +301,14 @@ with gr.Blocks(theme=seafoam) as demo:
         outputs=heart_output
     )
     
-    diabetes_submit.click(
-        fn=predict_diabetes,
+    bodyfat_submit.click(
+        fn=predict_bodyfat,
         inputs=[
-            diabetes_age, diabetes_bmi, diabetes_glucose,
-            diabetes_bp, diabetes_insulin, diabetes_pedigree
+            bodyfat_Age, bodyfat_Weight,
+            bodyfat_Height, bodyfat_Neck,bodyfat_Chest,  bodyfat_Abdomen, bodyfat_Hip, bodyfat_Thigh,
+            bodyfat_Knee, bodyfat_Ankle, bodyfat_Biceps, bodyfat_Forearm, bodyfat_Wrist
         ],
-        outputs=diabetes_output
+        outputs=bodyfat_output
     )
     
     cancer_submit.click(
