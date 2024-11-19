@@ -49,8 +49,6 @@ class Seafoam(Base):
 
 seafoam = Seafoam()
 
-
-    
 def predict_heart_disease(Age, Sex, ChestPainType, RestingBP, Cholesterol, FastingBS, 
                          RestingECG, MaxHR, ExerciseAngina, Oldpeak, ST_Slope):
     
@@ -117,8 +115,36 @@ def predict_bodyfat(Age,Weight,Height,Neck,Chest,Abdomen,Hip,Thigh,Knee,Ankle,Bi
     html_result = f"<div class='result-box {result}'>{result}</div>"
     return html_result
 
-def predict_cancer(Age, TumorSize, LymphNodes, Malignancy, CellShape, CellSize):
-    result = "Sağlıklı" 
+def predict_ashtma(Tiredness,Dry_Cough,Difficulty_in_Breathing,Sore_Throat,None_Sympton,Pains,Nasal_Congestion,Runny_Nose,None_Experiencing,Age,Gender):
+    
+    with open('data_processing/models/model_ashtma.pkl', 'rb') as f:
+        ashtma_model = pickle.load(f)
+    
+    data = {
+        
+        "Tiredness" : 1 if Tiredness == "Yes" else 0,
+        "Dry-Cough" :1 if Dry_Cough == "Yes" else 0,
+        "Difficulty-in-Breathing" : 1 if Difficulty_in_Breathing == "Yes" else 0,
+        "Sore-Throat" : 1 if Sore_Throat == "Yes" else 0,
+        "None_Sympton" : 1 if None_Sympton == "Yes" else 0,
+        "Pains" :  1 if Pains == "Yes" else 0,
+        "Nasal-Congestion" :  1 if Nasal_Congestion == "Yes" else 0,
+        "Runny-Nose" : 1 if Runny_Nose == "Yes" else 0,
+        "None_Experiencing" : 1 if None_Experiencing == "Yes" else 0,
+        "Age_0-9" :  1 if 0 <= Age <= 9 else 0,
+        "Age_10-19" : 1 if 10 <= Age <= 19 else 0,
+        "Age_20-24" : 1 if 20 <= Age <= 24 else 0,
+        "Age_25-59" : 1 if 25 <= Age <= 59 else 0,
+        "Age_60+" : 1 if 60 <= Age else 0,
+        "Gender_Female" : 1 if Gender == "Female" else 0,
+        "Gender_Male" : 1 if Gender == "Male" else 0
+    }
+    
+    df_input = pd.DataFrame(data, index=[0])
+    print(df_input)
+
+    prediction = ashtma_model.predict(df_input)
+    result = "Hasta" if prediction[0] == 1 else "Sağlıklı"
     html_result = f"<div class='result-box {result.lower()}'>{result}</div>"
     return html_result
 
@@ -274,21 +300,27 @@ with gr.Blocks(theme=seafoam) as demo:
                     bodyfat_submit = gr.Button("Predict", size="lg")
                     bodyfat_output = gr.HTML(label="Result")
 
-        # Cancer Tab
-        with gr.Tab("Cancer Prediction"):
+        # Ashtma Tab
+        with gr.Tab("Ashtma Prediction"):
             with gr.Column(elem_id="centered-container"):
-                gr.Markdown("# Cancer Prediction", elem_classes="markdown-text")
+                gr.Markdown("# Ashtma Prediction", elem_classes="markdown-text")
                 
                 with gr.Group(elem_classes="form-container"):
-                    cancer_age = gr.Number(label="Age")
-                    cancer_tumor_size = gr.Number(label="Tumor Size")
-                    cancer_lymph_nodes = gr.Number(label="Number of Lymph Nodes")
-                    cancer_malignancy = gr.Dropdown(choices=["Benign", "Malignant"], label="Malignancy")
-                    cancer_cell_shape = gr.Slider(minimum=1, maximum=10, label="Cell Shape Uniformity")
-                    cancer_cell_size = gr.Slider(minimum=1, maximum=10, label="Cell Size Uniformity")
                     
-                    cancer_submit = gr.Button("Predict", size="lg")
-                    cancer_output = gr.HTML(label="Result")
+                    ashtma_Tiredness = gr.Dropdown(choices=["Yes", "No"], label="Tiredness")
+                    ashtma_Dry_Cough = gr.Dropdown(choices=["Yes", "No"], label="Dry_Cough")
+                    ashtma_Difficulty_in_Breathing = gr.Dropdown(choices=["Yes", "No"], label="Difficulty_in_Breathing")
+                    ashtma_Sore_Throat = gr.Dropdown(choices=["Yes", "No"], label="Sore_Throat")
+                    ashtma_None_Sympton = gr.Dropdown(choices=["Yes", "No"], label="None_Sympton")
+                    ashtma_Pains = gr.Dropdown(choices=["Yes", "No"], label="Pains")
+                    ashtma_Nasal_Congestion = gr.Dropdown(choices=["Yes", "No"], label="Nasal_Congestion")
+                    ashtma_Runny_Nose = gr.Dropdown(choices=["Yes", "No"], label="Runny_Nose")
+                    ashtma_None_Experiencing = gr.Dropdown(choices=["Yes", "No"], label="None_Experiencing")
+                    ashtma_Age = gr.Number(label="Age")
+                    ashtma_Gender = gr.Dropdown(choices=["Male", "Female"], label="Gender")
+
+                    ashtma_submit = gr.Button("Predict", size="lg")
+                    ashtma_output = gr.HTML(label="Result")
 
     # Event handlers
     heart_submit.click(
@@ -311,13 +343,14 @@ with gr.Blocks(theme=seafoam) as demo:
         outputs=bodyfat_output
     )
     
-    cancer_submit.click(
-        fn=predict_cancer,
+    ashtma_submit.click(
+        fn=predict_ashtma,
         inputs=[
-            cancer_age, cancer_tumor_size, cancer_lymph_nodes,
-            cancer_malignancy, cancer_cell_shape, cancer_cell_size
+            ashtma_Tiredness, ashtma_Dry_Cough, ashtma_Difficulty_in_Breathing,ashtma_Sore_Throat,
+            ashtma_None_Sympton, ashtma_Pains, ashtma_Nasal_Congestion, ashtma_Runny_Nose, ashtma_None_Experiencing,
+            ashtma_Age, ashtma_Gender, 
         ],
-        outputs=cancer_output
+        outputs=ashtma_output
     )
 
 demo.launch()
